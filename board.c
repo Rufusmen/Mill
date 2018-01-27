@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include <gtk/gtk.h>
 #include "board.h"
 
 int check(Board board, int x, int y, int turn) {
@@ -47,7 +48,7 @@ void init_graph() {
     graph[13][2] = 15;
     graph[13][3] = 23;
     graph[15][0] = 13;
-    graph[15][0] = 35;
+    graph[15][1] = 35;
     graph[22][0] = 23;
     graph[22][1] = 32;
     graph[23][0] = 24;
@@ -122,6 +123,8 @@ Board init_board() {
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][i] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][6 - i] = 0;
     board->update = 0;
+    board->last_y = -1;
+    board->last_x = -1;
     board->state = PLACE;
     board->turn = FIRST;
     board->player[FIRST] = init_player("p1");
@@ -141,10 +144,38 @@ int can_move(int x, int y, Board board) {
     return 0;
 }
 
+void end(Board board){
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+    gtk_window_set_title(GTK_WINDOW(window), "Mill Game over");
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 100);
+    GtkWidget *label = gtk_label_new("<span foreground=\"red\" size=\"100000\">Game Over</span>");
+    gtk_label_set_use_markup (GTK_LABEL (label), TRUE);
+    char buff[40];
+    if(board->player[0]->pawns<3)sprintf(buff,"Player: %s wins",board->player[1]->name);
+    else sprintf(buff,"<span size=\"50000\">Player: <i>%s</i> wins</span>",board->player[0]->name);
+    GtkWidget *label2 = gtk_label_new(buff);
+    gtk_label_set_use_markup (GTK_LABEL (label2), TRUE);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(box), label2, TRUE, TRUE, 0);
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    gtk_container_add(GTK_CONTAINER(window),box);
+    gtk_widget_show_all(window);
+    gtk_main();
+}
+
 void clicked(Board board, int x, int y) {
     switch (board->state) {
         case PLACE: {
-            if (board->tab[x][y] == 0) {
+            if (board->last_x == x && board->last_y == y) {
+                board->tab[x][y]=board->turn+1;
+                board->update = board->turn + 1;
+                board->player[board->turn]->in_stash--;
+                board->state = CHOSE;
+                board->last_x = board->last_y = -1;
+            } else if (board->tab[x][y] == 0) {
                 board->update = board->turn + 1;
                 board->tab[x][y] = board->turn + 1;
                 board->player[board->turn]->in_stash--;
@@ -169,13 +200,18 @@ void clicked(Board board, int x, int y) {
                 board->tab[x][y] = 0;
                 board->update = 0;
                 board->player[board->turn]->in_stash++;
-                if (board->player[board->turn]->pawns == 3)board->state = PLACE;
+                if (board->player[board->turn]->pawns == 3){
+                    board->state = PLACE;
+                    board->last_x = x;
+                    board->last_y = y;
+                }
                 else {
-                    if (can_move(x, y, board)) {
+                    if (can_move(x, y, board)){
+                        board->state = MOVE;
                         board->last_x = x;
                         board->last_y = y;
-                        board->state = MOVE;
-                    } else {
+                    }
+                    else {
                         board->update = -1;
                         board->error = "You can't move this pawn";
                         printf("%s\n", board->error);
@@ -195,15 +231,17 @@ void clicked(Board board, int x, int y) {
                         board->update = -1;
                         board->error = "You can't destroy this pawn";
                         printf("%s\n", board->error);
-                    }
-                    else{
+                    } else {
                         board->tab[x][y] = 0;
                         board->update = 0;
                         board->turn++;
                         board->turn %= 2;
                         board->player[board->turn]->pawns--;
-                        if (board->player[board->turn]->pawns < 3)board->update = 3 + board->turn;
-                        if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
+                        if (board->player[board->turn]->pawns < 3) {
+                            board->update = 0;
+                            board->state = END;
+                        }
+                        else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
                         else board->state = CHOSE;
                     }
                 } else {
@@ -212,8 +250,11 @@ void clicked(Board board, int x, int y) {
                     board->turn++;
                     board->turn %= 2;
                     board->player[board->turn]->pawns--;
-                    if (board->player[board->turn]->pawns < 3)board->update = 3 + board->turn;
-                    if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
+                    if (board->player[board->turn]->pawns < 3) {
+                        board->update = 0;
+                        board->state = END;
+                    }
+                    else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
                     else board->state = CHOSE;
                 }
             } else {
@@ -224,7 +265,13 @@ void clicked(Board board, int x, int y) {
             break;
         }
         case MOVE: {
-            if (board->tab[x][y] == 0) {
+            if (board->last_x == x && board->last_y == y) {
+                board->tab[x][y]=board->turn+1;
+                board->update = board->turn + 1;
+                board->last_x = board->last_y = -1;
+                board->player[board->turn]->in_stash--;
+                board->state = CHOSE;
+            } else if (board->tab[x][y] == 0) {
                 if (move_check(x, y, board->last_x, board->last_y)) {
                     board->update = board->turn + 1;
                     board->tab[x][y] = board->turn + 1;
@@ -248,12 +295,42 @@ void clicked(Board board, int x, int y) {
             }
             break;
         }
+        case END: {
+            end(board);
+        }
     }
 }
 
 int update(Board board, int x, int y) {
     int update = board->update;
     board->update = 0;
-    printf("%d\n", update);
+    if(update!=-1)switch (board->state){
+        case PLACE:{
+            board->error = "Chose where you want to place your pawn";
+            printf("%s\n", board->error);
+            break;
+        }
+        case MOVE:{
+            board->error = "Chose where you want to move your pawn";
+            printf("%s\n", board->error);
+            break;
+        }
+        case CHOSE:{
+            board->error = "Chose pawn which you want to move";
+            printf("%s\n", board->error);
+            break;
+        }
+        case DESTROY:{
+            board->error = "Chose enemy pawn which you want to destroy";
+            printf("%s\n", board->error);
+            break;
+        }
+        case END:{
+            board->error = "Game ends";
+            printf("%s\n", board->error);
+            end(board);
+            break;
+        }
+    }
     return update;
 }

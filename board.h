@@ -11,6 +11,7 @@
 #define CHOSE 1
 #define DESTROY 2
 #define MOVE 4
+#define END 5
 #define FIRST 0
 #define SECOND 1
 
