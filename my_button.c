@@ -3,8 +3,10 @@
 //
 
 #include "my_button.h"
+#include "logger.h"
 
 void click(GtkWidget *event_box, GdkEventButton *event, gpointer data) {
+    logger_log(LOGGER_LOG_LEVEL_DEBUG,"click on: %d %d",((Button) data)->x,((Button) data)->y);
     clicked(((Button) data)->board, ((Button) data)->x, ((Button) data)->y);
     int x = update(((Button) data)->board);
     if (x >= 0) {

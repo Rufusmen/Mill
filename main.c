@@ -2,6 +2,7 @@
 #include <gtk/gtk.h>
 #include "board.h"
 #include "my_button.h"
+#include "logger.h"
 
 Button button_board[7][7];
 char *assets[7][7][3];
@@ -121,6 +122,7 @@ void init_assets(){
 }
 
 int main(int argc, char **argv) {
+    logger_log(LOGGER_LOG_LEVEL_DEBUG,"App start...");
     init_assets();
     init_graph();
     gtk_init(&argc, &argv);
@@ -144,4 +146,6 @@ int main(int argc, char **argv) {
     gtk_container_add(GTK_CONTAINER(window), box);
     gtk_widget_show_all(window);
     gtk_main();
+    logger_log(LOGGER_LOG_LEVEL_DEBUG,"App close");
+    logger_close();
 }

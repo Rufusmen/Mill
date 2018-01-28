@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include "board.h"
+#include "logger.h"
 
 int check(Board board, int x, int y, int turn) {
     int a = 10 * x + y;
@@ -189,11 +190,10 @@ void clicked(Board board, int x, int y) {
                     if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
                     else board->state = CHOSE;
                 }
-                printf("%d %d\n", board->turn, board->player[board->turn]->in_stash);
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
-                printf("%s\n", board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
             }
             break;
         }
@@ -216,13 +216,13 @@ void clicked(Board board, int x, int y) {
                     else {
                         board->update = -1;
                         board->error = "<span size=\"x-large\" foreground=\"red\">You can't move this pawn</span>";
-                        printf("%s\n", board->error);
+                        logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
                     }
                 }
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">You must chose your pawn</span>";
-                printf("%s\n", board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
             }
             break;
         }
@@ -232,7 +232,7 @@ void clicked(Board board, int x, int y) {
                     if (check_mills(board, ((board->turn + 1) % 2) + 1)) {
                         board->update = -1;
                         board->error = "<span size=\"x-large\" foreground=\"red\">You can't destroy this pawn</span>";
-                        printf("%s\n", board->error);
+                        logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
                     } else {
                         board->tab[x][y] = 0;
                         board->update = 0;
@@ -262,7 +262,7 @@ void clicked(Board board, int x, int y) {
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">You must chose enemy pawn</span>";
-                printf("%s\n", board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
             }
             break;
         }
@@ -288,12 +288,12 @@ void clicked(Board board, int x, int y) {
                 } else {
                     board->update = -1;
                     board->error = "<span size=\"x-large\" foreground=\"red\">You can move only to the next field</span>";
-                    printf("%s\n", board->error);
+                    logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
                 }
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
-                printf("%s\n", board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
             }
             break;
         }
@@ -309,27 +309,27 @@ int update(Board board) {
     if(update!=-1)switch (board->state){
         case PLACE:{
             board->error = "<span size=\"x-large\">Chose where you want to place your pawn</span>";
-            printf("%s\n", board->error);
+            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
             break;
         }
         case MOVE:{
             board->error = "<span size=\"x-large\">Chose where you want to move your pawn</span>";
-            printf("%s\n", board->error);
+            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
             break;
         }
         case CHOSE:{
             board->error = "<span size=\"x-large\">Chose pawn which you want to move</span>";
-            printf("%s\n", board->error);
+            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
             break;
         }
         case DESTROY:{
             board->error = "<span size=\"x-large\">Chose enemy pawn which you want to destroy</span>";
-            printf("%s\n", board->error);
+            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
             break;
         }
         case END:{
             board->error = "<span size=\"x-large\">Game ends</span>";
-            printf("%s\n", board->error);
+            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
             end(board);
             break;
         }
