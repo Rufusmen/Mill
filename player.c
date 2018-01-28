@@ -12,3 +12,7 @@ Player init_player(char *name){
     p->in_stash=p->pawns;
     return p;
 }
+
+void player_reset(Player p){
+    p->pawns=p->in_stash=9;
+}

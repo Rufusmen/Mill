@@ -13,4 +13,5 @@ typedef struct player{
 } *Player;
 
 Player init_player(char *name);
+void player_reset(Player p);
 #endif //MILL_PLAYER_H

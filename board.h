@@ -36,4 +36,5 @@ Board init_board(GtkWidget* info,GtkWidget* score);
 
 void clicked(Board board,int x,int y);
 int update(Board board);
+void reset(Board board);
 #endif //MILL_BOARD_H

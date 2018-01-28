@@ -116,22 +116,22 @@ int move_check(int x, int y, int last_x, int last_y) {
     return 0;
 }
 
-Board init_board(GtkWidget* info,GtkWidget* score) {
+Board init_board(GtkWidget *info, GtkWidget *score) {
     Board board = malloc(sizeof(struct board));
     for (int i = 0; i < 7; i++)for (int j = 0; j < 7; j++)board->tab[i][j] = -1;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][3] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[3][i] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][i] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][6 - i] = 0;
-    board->info=info;
-    board->score=score;
+    board->info = info;
+    board->score = score;
     board->update = 0;
     board->last_y = -1;
     board->last_x = -1;
     board->state = PLACE;
     board->turn = FIRST;
-    board->player[FIRST] = init_player("p1");
-    board->player[SECOND] = init_player("p2");
+    board->player[FIRST] = init_player("White");
+    board->player[SECOND] = init_player("Black");
     return board;
 }
 
@@ -147,24 +147,24 @@ int can_move(int x, int y, Board board) {
     return 0;
 }
 
-void end(Board board){
+void end(Board board) {
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    gtk_window_set_title(GTK_WINDOW(window), "Mill Game over");
+    gtk_window_set_title(GTK_WINDOW(window), "Game over");
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(window), 100);
     GtkWidget *label = gtk_label_new("<span foreground=\"red\" size=\"100000\">Game Over</span>");
-    gtk_label_set_use_markup (GTK_LABEL (label), TRUE);
+    gtk_label_set_use_markup(GTK_LABEL (label), TRUE);
     char buff[40];
-    if(board->player[0]->pawns<3)sprintf(buff,"Player: %s wins",board->player[1]->name);
-    else sprintf(buff,"<span size=\"50000\">Player: <i>%s</i> wins</span>",board->player[0]->name);
+    if (board->player[0]->pawns < 3)sprintf(buff, "Player: %s wins", board->player[1]->name);
+    else sprintf(buff, "<span size=\"50000\">Player: <i>%s</i> wins</span>", board->player[0]->name);
     GtkWidget *label2 = gtk_label_new(buff);
-    gtk_label_set_use_markup (GTK_LABEL (label2), TRUE);
+    gtk_label_set_use_markup(GTK_LABEL (label2), TRUE);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(box), label2, TRUE, TRUE, 0);
-    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    gtk_container_add(GTK_CONTAINER(window),box);
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(close), window);
+    gtk_container_add(GTK_CONTAINER(window), box);
     gtk_widget_show_all(window);
     gtk_main();
 }
@@ -173,7 +173,7 @@ void clicked(Board board, int x, int y) {
     switch (board->state) {
         case PLACE: {
             if (board->last_x == x && board->last_y == y) {
-                board->tab[x][y]=board->turn+1;
+                board->tab[x][y] = board->turn + 1;
                 board->update = board->turn + 1;
                 board->player[board->turn]->in_stash--;
                 board->state = CHOSE;
@@ -193,7 +193,7 @@ void clicked(Board board, int x, int y) {
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
-                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
             }
             break;
         }
@@ -202,27 +202,25 @@ void clicked(Board board, int x, int y) {
                 board->tab[x][y] = 0;
                 board->update = 0;
                 board->player[board->turn]->in_stash++;
-                if (board->player[board->turn]->pawns == 3){
+                if (board->player[board->turn]->pawns == 3) {
                     board->state = PLACE;
                     board->last_x = x;
                     board->last_y = y;
-                }
-                else {
-                    if (can_move(x, y, board)){
+                } else {
+                    if (can_move(x, y, board)) {
                         board->state = MOVE;
                         board->last_x = x;
                         board->last_y = y;
-                    }
-                    else {
+                    } else {
                         board->update = -1;
                         board->error = "<span size=\"x-large\" foreground=\"red\">You can't move this pawn</span>";
-                        logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                        logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
                     }
                 }
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">You must chose your pawn</span>";
-                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
             }
             break;
         }
@@ -232,7 +230,7 @@ void clicked(Board board, int x, int y) {
                     if (check_mills(board, ((board->turn + 1) % 2) + 1)) {
                         board->update = -1;
                         board->error = "<span size=\"x-large\" foreground=\"red\">You can't destroy this pawn</span>";
-                        logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                        logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
                     } else {
                         board->tab[x][y] = 0;
                         board->update = 0;
@@ -242,8 +240,7 @@ void clicked(Board board, int x, int y) {
                         if (board->player[board->turn]->pawns < 3) {
                             board->update = 0;
                             board->state = END;
-                        }
-                        else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
+                        } else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
                         else board->state = CHOSE;
                     }
                 } else {
@@ -255,20 +252,19 @@ void clicked(Board board, int x, int y) {
                     if (board->player[board->turn]->pawns < 3) {
                         board->update = 0;
                         board->state = END;
-                    }
-                    else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
+                    } else if (board->player[board->turn]->in_stash > 0)board->state = PLACE;
                     else board->state = CHOSE;
                 }
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">You must chose enemy pawn</span>";
-                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
             }
             break;
         }
         case MOVE: {
             if (board->last_x == x && board->last_y == y) {
-                board->tab[x][y]=board->turn+1;
+                board->tab[x][y] = board->turn + 1;
                 board->update = board->turn + 1;
                 board->last_x = board->last_y = -1;
                 board->player[board->turn]->in_stash--;
@@ -288,17 +284,17 @@ void clicked(Board board, int x, int y) {
                 } else {
                     board->update = -1;
                     board->error = "<span size=\"x-large\" foreground=\"red\">You can move only to the next field</span>";
-                    logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                    logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
                 }
             } else {
                 board->update = -1;
                 board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
-                logger_log(LOGGER_LOG_LEVEL_WARN,board->error);
+                logger_log(LOGGER_LOG_LEVEL_WARN, board->error);
             }
             break;
         }
         case END: {
-            end(board);
+
         }
     }
 }
@@ -306,40 +302,56 @@ void clicked(Board board, int x, int y) {
 int update(Board board) {
     int update = board->update;
     board->update = 0;
-    if(update!=-1)switch (board->state){
-        case PLACE:{
-            board->error = "<span size=\"x-large\">Chose where you want to place your pawn</span>";
-            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
-            break;
+    if (update != -1)
+        switch (board->state) {
+            case PLACE: {
+                board->error = "<span size=\"x-large\">Chose where you want to place your pawn</span>";
+                logger_log(LOGGER_LOG_LEVEL_INFO, board->error);
+                break;
+            }
+            case MOVE: {
+                board->error = "<span size=\"x-large\">Chose where you want to move your pawn</span>";
+                logger_log(LOGGER_LOG_LEVEL_INFO, board->error);
+                break;
+            }
+            case CHOSE: {
+                board->error = "<span size=\"x-large\">Chose pawn which you want to move</span>";
+                logger_log(LOGGER_LOG_LEVEL_INFO, board->error);
+                break;
+            }
+            case DESTROY: {
+                board->error = "<span size=\"x-large\">Chose enemy pawn which you want to destroy</span>";
+                logger_log(LOGGER_LOG_LEVEL_INFO, board->error);
+                break;
+            }
+            case END: {
+                board->error = "<span size=\"x-large\">Game ends</span>";
+                logger_log(LOGGER_LOG_LEVEL_INFO, board->error);
+                end(board);
+            }
         }
-        case MOVE:{
-            board->error = "<span size=\"x-large\">Chose where you want to move your pawn</span>";
-            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
-            break;
-        }
-        case CHOSE:{
-            board->error = "<span size=\"x-large\">Chose pawn which you want to move</span>";
-            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
-            break;
-        }
-        case DESTROY:{
-            board->error = "<span size=\"x-large\">Chose enemy pawn which you want to destroy</span>";
-            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
-            break;
-        }
-        case END:{
-            board->error = "<span size=\"x-large\">Game ends</span>";
-            logger_log(LOGGER_LOG_LEVEL_INFO,board->error);
-            end(board);
-            break;
-        }
-    }
-    gtk_label_set_text(GTK_LABEL(board->info),board->error);
-    gtk_label_set_use_markup (GTK_LABEL (board->info), TRUE);
+    gtk_label_set_text(GTK_LABEL(board->info), board->error);
+    gtk_label_set_use_markup(GTK_LABEL (board->info), TRUE);
     char buff[100];
-    sprintf(buff,"<span size=\"x-large\">Turn: %s \t\t\t Pawns: \tWhite: %d \tBlack: %d </span>",board->player[board->turn]->name,board->player[0]->pawns,board->player[1]->pawns);
-    gtk_label_set_text(GTK_LABEL(board->score),buff);
-    gtk_label_set_use_markup (GTK_LABEL (board->score), TRUE);
+    sprintf(buff, "<span size=\"x-large\">Turn: %s \t\t\t Pawns: \tWhite: %d \tBlack: %d </span>",
+            board->player[board->turn]->name, board->player[0]->pawns, board->player[1]->pawns);
+    gtk_label_set_text(GTK_LABEL(board->score), buff);
+    gtk_label_set_use_markup(GTK_LABEL (board->score), TRUE);
 
     return update;
+}
+
+void reset(Board board){
+    for (int i = 0; i < 7; i++)for (int j = 0; j < 7; j++)board->tab[i][j] = -1;
+    for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][3] = 0;
+    for (int i = 0; i < 7; i++)if (i != 3)board->tab[3][i] = 0;
+    for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][i] = 0;
+    for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][6 - i] = 0;
+    board->update = 0;
+    board->last_y = -1;
+    board->last_x = -1;
+    board->state = PLACE;
+    board->turn = FIRST;
+    player_reset(board->player[FIRST]);
+    player_reset(board->player[SECOND]);
 }
