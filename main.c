@@ -123,8 +123,11 @@ void init_assets(){
 int main(int argc, char **argv) {
     init_assets();
     init_graph();
-    Board board = init_board();
     gtk_init(&argc, &argv);
+    GtkWidget *label1 = gtk_label_new("Score:");
+    GtkWidget *label2 = gtk_label_new("INFO");
+    Board board = init_board(label2,label1);
+    update(board);
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
     gtk_window_set_title(GTK_WINDOW(window), "Mill");
@@ -133,8 +136,6 @@ int main(int argc, char **argv) {
 
     g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    GtkWidget *label1 = gtk_label_new("Score:");
-    GtkWidget *label2 = gtk_label_new("INFO");
     GtkWidget *grid = gtk_grid_new();
     set_grid(grid, board);
     gtk_box_pack_start(GTK_BOX(box), label1, TRUE, TRUE, 0);

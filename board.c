@@ -115,13 +115,15 @@ int move_check(int x, int y, int last_x, int last_y) {
     return 0;
 }
 
-Board init_board() {
+Board init_board(GtkWidget* info,GtkWidget* score) {
     Board board = malloc(sizeof(struct board));
     for (int i = 0; i < 7; i++)for (int j = 0; j < 7; j++)board->tab[i][j] = -1;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][3] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[3][i] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][i] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][6 - i] = 0;
+    board->info=info;
+    board->score=score;
     board->update = 0;
     board->last_y = -1;
     board->last_x = -1;
@@ -190,7 +192,7 @@ void clicked(Board board, int x, int y) {
                 printf("%d %d\n", board->turn, board->player[board->turn]->in_stash);
             } else {
                 board->update = -1;
-                board->error = "Other pawn";
+                board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
                 printf("%s\n", board->error);
             }
             break;
@@ -213,13 +215,13 @@ void clicked(Board board, int x, int y) {
                     }
                     else {
                         board->update = -1;
-                        board->error = "You can't move this pawn";
+                        board->error = "<span size=\"x-large\" foreground=\"red\">You can't move this pawn</span>";
                         printf("%s\n", board->error);
                     }
                 }
             } else {
                 board->update = -1;
-                board->error = "You must chose your pawn";
+                board->error = "<span size=\"x-large\" foreground=\"red\">You must chose your pawn</span>";
                 printf("%s\n", board->error);
             }
             break;
@@ -229,7 +231,7 @@ void clicked(Board board, int x, int y) {
                 if (check(board, x, y, ((board->turn + 1) % 2) + 1)) {
                     if (check_mills(board, ((board->turn + 1) % 2) + 1)) {
                         board->update = -1;
-                        board->error = "You can't destroy this pawn";
+                        board->error = "<span size=\"x-large\" foreground=\"red\">You can't destroy this pawn</span>";
                         printf("%s\n", board->error);
                     } else {
                         board->tab[x][y] = 0;
@@ -259,7 +261,7 @@ void clicked(Board board, int x, int y) {
                 }
             } else {
                 board->update = -1;
-                board->error = "You must chose enemy pawn";
+                board->error = "<span size=\"x-large\" foreground=\"red\">You must chose enemy pawn</span>";
                 printf("%s\n", board->error);
             }
             break;
@@ -285,12 +287,12 @@ void clicked(Board board, int x, int y) {
                     }
                 } else {
                     board->update = -1;
-                    board->error = "You can move only to the next field";
+                    board->error = "<span size=\"x-large\" foreground=\"red\">You can move only to the next field</span>";
                     printf("%s\n", board->error);
                 }
             } else {
                 board->update = -1;
-                board->error = "Other pawn";
+                board->error = "<span size=\"x-large\" foreground=\"red\">Other pawn</span>";
                 printf("%s\n", board->error);
             }
             break;
@@ -301,36 +303,43 @@ void clicked(Board board, int x, int y) {
     }
 }
 
-int update(Board board, int x, int y) {
+int update(Board board) {
     int update = board->update;
     board->update = 0;
     if(update!=-1)switch (board->state){
         case PLACE:{
-            board->error = "Chose where you want to place your pawn";
+            board->error = "<span size=\"x-large\">Chose where you want to place your pawn</span>";
             printf("%s\n", board->error);
             break;
         }
         case MOVE:{
-            board->error = "Chose where you want to move your pawn";
+            board->error = "<span size=\"x-large\">Chose where you want to move your pawn</span>";
             printf("%s\n", board->error);
             break;
         }
         case CHOSE:{
-            board->error = "Chose pawn which you want to move";
+            board->error = "<span size=\"x-large\">Chose pawn which you want to move</span>";
             printf("%s\n", board->error);
             break;
         }
         case DESTROY:{
-            board->error = "Chose enemy pawn which you want to destroy";
+            board->error = "<span size=\"x-large\">Chose enemy pawn which you want to destroy</span>";
             printf("%s\n", board->error);
             break;
         }
         case END:{
-            board->error = "Game ends";
+            board->error = "<span size=\"x-large\">Game ends</span>";
             printf("%s\n", board->error);
             end(board);
             break;
         }
     }
+    gtk_label_set_text(GTK_LABEL(board->info),board->error);
+    gtk_label_set_use_markup (GTK_LABEL (board->info), TRUE);
+    char buff[100];
+    sprintf(buff,"<span size=\"x-large\">Turn: %s \t\t\t Pawns: \tWhite: %d \tBlack: %d </span>",board->player[board->turn]->name,board->player[0]->pawns,board->player[1]->pawns);
+    gtk_label_set_text(GTK_LABEL(board->score),buff);
+    gtk_label_set_use_markup (GTK_LABEL (board->score), TRUE);
+
     return update;
 }

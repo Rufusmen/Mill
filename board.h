@@ -28,10 +28,12 @@ typedef struct board{
     Player player[2];
     char *error;
     int last_x,last_y;
+    GtkWidget *info;
+    GtkWidget *score;
 } *Board;
 
-Board init_board();
+Board init_board(GtkWidget* info,GtkWidget* score);
 
 void clicked(Board board,int x,int y);
-int update(Board board,int x,int y);
+int update(Board board);
 #endif //MILL_BOARD_H

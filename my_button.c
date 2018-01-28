@@ -6,7 +6,7 @@
 
 void click(GtkWidget *event_box, GdkEventButton *event, gpointer data) {
     clicked(((Button) data)->board, ((Button) data)->x, ((Button) data)->y);
-    int x = update(((Button) data)->board, ((Button) data)->x, ((Button) data)->y);
+    int x = update(((Button) data)->board);
     if (x >= 0) {
         gtk_image_set_from_file(((Button) data)->image, ((Button) data)->assets[x]);
     } else {
