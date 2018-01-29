@@ -7,6 +7,7 @@
 #include "board.h"
 #include "logger.h"
 
+
 int check(Board board, int x, int y, int turn) {
     int a = 10 * x + y;
     if (graph[a][2] == -1) {
@@ -116,7 +117,7 @@ int move_check(int x, int y, int last_x, int last_y) {
     return 0;
 }
 
-Board init_board(GtkWidget *info, GtkWidget *score) {
+Board init_board(GtkWidget *info, GtkWidget *score, PipesPtr pipes, char *name) {
     Board board = malloc(sizeof(struct board));
     for (int i = 0; i < 7; i++)for (int j = 0; j < 7; j++)board->tab[i][j] = -1;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][3] = 0;
@@ -132,6 +133,11 @@ Board init_board(GtkWidget *info, GtkWidget *score) {
     board->turn = FIRST;
     board->player[FIRST] = init_player("White");
     board->player[SECOND] = init_player("Black");
+    if (pipes != NULL) {
+        board->pipes = pipes;
+        if (name[0] == 'A')board->color = FIRST;
+        else board->color = SECOND;
+    } else board->pipes = NULL;
     return board;
 }
 
@@ -156,7 +162,7 @@ void end(Board board) {
     GtkWidget *label = gtk_label_new("<span foreground=\"red\" size=\"100000\">Game Over</span>");
     gtk_label_set_use_markup(GTK_LABEL (label), TRUE);
     char buff[40];
-    if (board->player[0]->pawns < 3)sprintf(buff, "Player: %s wins", board->player[1]->name);
+    if (board->player[0]->pawns < 3)sprintf(buff, "<span size=\"50000\">Player: <i>%s</i> wins</span>", board->player[1]->name);
     else sprintf(buff, "<span size=\"50000\">Player: <i>%s</i> wins</span>", board->player[0]->name);
     GtkWidget *label2 = gtk_label_new(buff);
     gtk_label_set_use_markup(GTK_LABEL (label2), TRUE);
@@ -330,6 +336,7 @@ int update(Board board) {
                 end(board);
             }
         }
+    if(board->pipes!=NULL&&board->turn!=board->color)board->error="<span foreground=\"blue\" size=\"x-large\">Enemy turn</span>";
     gtk_label_set_text(GTK_LABEL(board->info), board->error);
     gtk_label_set_use_markup(GTK_LABEL (board->info), TRUE);
     char buff[100];
@@ -341,7 +348,7 @@ int update(Board board) {
     return update;
 }
 
-void reset(Board board){
+void reset(Board board) {
     for (int i = 0; i < 7; i++)for (int j = 0; j < 7; j++)board->tab[i][j] = -1;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[i][3] = 0;
     for (int i = 0; i < 7; i++)if (i != 3)board->tab[3][i] = 0;

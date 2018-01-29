@@ -3,14 +3,48 @@
 #include "board.h"
 #include "my_button.h"
 #include "logger.h"
+#include "fifo.h"
 
 Button button_board[7][7];
 char *assets[7][7][3];
+PipesPtr pipes=NULL;
+
+void change(int x,int y,int state){
+    gtk_image_set_from_file(GTK_IMAGE(button_board[x][y]->image),assets[x][y][state]);
+}
+
+static gboolean read_pipe(gpointer board){
+    if(((Board)board)->turn==((Board)board)->color)return 1;
+    char buff[15];
+    if(getStringFromPipe((((Board)board)->pipes),buff,15)){
+        int x=buff[0]-'0';
+        int y=buff[2]-'0';
+        int state=buff[4]-'0';
+        unsigned int turn = (unsigned int) (buff[6] - '0');
+        int state2=buff[8]-'0';
+        int pawns = buff[10]-'0';
+        int stash = buff[12]-'0';
+        printf("%s\n",buff);
+        if(x<0||y<0||state<0||turn<0||state2<0)
+            return 1;
+        int other = (((Board)board)->color+1)%2;
+        ((Board)board)->player[other]->pawns=pawns;
+        ((Board)board)->player[other]->in_stash=stash;
+        ((Board)board)->turn=turn;
+        ((Board)board)->tab[x][y]=state;
+        ((Board)board)->state= (unsigned int) state2;
+        if(state2==DESTROY)((Board)board)->player[((Board)board)->color]->pawns--;
+        change(x,y,state);
+        update((Board)board);
+    }
+    return 1;
+}
 
 void close_app() {
     gtk_main_quit();
     logger_log(LOGGER_LOG_LEVEL_DEBUG, "App close");
     logger_close();
+    if(pipes!=NULL)closePipes(pipes);
     exit(0);
 }
 
@@ -136,16 +170,21 @@ void init_assets() {
 
 int main(int argc, char **argv) {
     logger_log(LOGGER_LOG_LEVEL_DEBUG, "App start...");
+    char *title= "Mill";
+    if(argc > 1){
+        pipes = initPipes(argc,argv);
+        title = argv[1];
+    }
     init_assets();
     init_graph();
     gtk_init(&argc, &argv);
     GtkWidget *label1 = gtk_label_new("Score:");
     GtkWidget *label2 = gtk_label_new("INFO");
-    Board board = init_board(label2, label1);
+    Board board = init_board(label2, label1,pipes,argv[1]);
     update(board);
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    gtk_window_set_title(GTK_WINDOW(window), "Mill");
+    gtk_window_set_title(GTK_WINDOW(window), title);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 
@@ -153,7 +192,7 @@ int main(int argc, char **argv) {
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *restart = gtk_button_new_with_label("restart");
-    g_signal_connect(GTK_BUTTON(restart), "clicked", G_CALLBACK(restart_app), board);
+    if(pipes==NULL)g_signal_connect(GTK_BUTTON(restart), "clicked", G_CALLBACK(restart_app), board);
     gtk_box_pack_start(GTK_BOX(box2), label1, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(box2), restart, TRUE, TRUE, 0);
     GtkWidget *grid = gtk_grid_new();
@@ -163,7 +202,9 @@ int main(int argc, char **argv) {
     gtk_box_pack_start(GTK_BOX(box), label2, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(window), box);
     gtk_widget_show_all(window);
+    if(pipes!=NULL)g_timeout_add(100,read_pipe,board);
     gtk_main();
     logger_log(LOGGER_LOG_LEVEL_DEBUG, "App close");
     logger_close();
+    closePipes(pipes);
 }

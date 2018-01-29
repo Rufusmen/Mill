@@ -6,11 +6,19 @@
 #include "logger.h"
 
 void click(GtkWidget *event_box, GdkEventButton *event, gpointer data) {
+    if(((Button) data)->board->pipes!=NULL&&((Button) data)->board->turn!=((Button) data)->board->color)
+        return;
     logger_log(LOGGER_LOG_LEVEL_DEBUG,"click on: %d %d",((Button) data)->x,((Button) data)->y);
     clicked(((Button) data)->board, ((Button) data)->x, ((Button) data)->y);
     int x = update(((Button) data)->board);
     if (x >= 0) {
         gtk_image_set_from_file(GTK_IMAGE(((Button) data)->image), ((Button) data)->assets[x]);
+        if(((Button) data)->board->pipes!=NULL){
+            char buff[15];
+            int player = ((Button) data)->board->color;
+            sprintf(buff,"%d %d %d %d %d %d %d",((Button) data)->x,((Button) data)->y,x,((Button) data)->board->turn,((Button) data)->board->state,((Button) data)->board->player[player]->pawns,((Button) data)->board->player[player]->in_stash);
+            sendStringToPipe(((Button) data)->board->pipes,buff);
+        }
     }
 }
 

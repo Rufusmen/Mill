@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 #include "player.h"
+#include "fifo.h"
+
 #define PLACE 0
 #define CHOSE 1
 #define DESTROY 2
@@ -30,9 +32,11 @@ typedef struct board{
     int last_x,last_y;
     GtkWidget *info;
     GtkWidget *score;
+    PipesPtr pipes;
+    int color;
 } *Board;
 
-Board init_board(GtkWidget* info,GtkWidget* score);
+Board init_board(GtkWidget* info,GtkWidget* score,PipesPtr pipes,char *name);
 
 void clicked(Board board,int x,int y);
 int update(Board board);
