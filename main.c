@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
     GtkWidget *restart = gtk_button_new_with_label("restart");
     if(pipes==NULL)g_signal_connect(GTK_BUTTON(restart), "clicked", G_CALLBACK(restart_app), board);
     gtk_box_pack_start(GTK_BOX(box2), label1, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(box2), restart, TRUE, TRUE, 0);
+    if(pipes==NULL)gtk_box_pack_start(GTK_BOX(box2), restart, TRUE, TRUE, 0);
     GtkWidget *grid = gtk_grid_new();
     set_grid(grid, board);
     gtk_box_pack_start(GTK_BOX(box), box2, TRUE, TRUE, 0);
