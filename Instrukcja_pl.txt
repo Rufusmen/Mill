@@ -1,0 +1,26 @@
+Instrukcja
+
+Gra dzieli się na 3 etapy:
+  1.Ustawianie pionów z zasobów
+  2.Przemieszczanie pionów
+  3.Gra końcowa
+ 
+ 
+ 1. 
+    Gracze na zmianę ustawiają pionki na wskazanych polach.
+    Jeśli gracz ustawi swoje pionki w młynek (3 w rzędzie) to może usunąć z planszy pionek przeciwnika przez kliknięcie na niego.
+    Nie można usuwać pionków ustawionych w młynek, chyba że jest to jedyna opcja usunięcia pionu.
+    Jeśli każdy z graczy wystawi 9 pionów rozpoczyna się 2 faza gry.
+    
+2.
+    Graczę na zmiane przesówają swoje piony na sąsiednie pole przez wybranie piona, a następnie wybranie dla niego nowej pozycji.
+    Jeśli gracz chce wybrać inny pionek wystarczy odłożyć wybrany pionek na jego poprzednią pozycję.
+    Jeśli gracz ustawi swoje pionki w młynek (3 w rzędzie) to może usunąć z planszy pionek przeciwnika przez kliknięcie na niego.
+    Nie można usuwać pionków ustawionych w młynek, chyba że jest to jedyna opcja usunięcia pionu.
+    Jeśli któremuś z graczy zostaną 3 piony przechodzi on do 3 fazy gry.
+    
+3.
+    Gracz może teraz skakać pionkami tzn. w fazie przemieszczenia może wybrać dowolne puste miejsce na nową pozycję dla piona.
+    Gracz któremu jako pierwszemu pozostaną na planszy 2 piony przegrywa.
+    
+    Możliwy jest podgląd przebiegu poprzednich gier. W pliku Mill.log przetrzymywane są wszystkie wykonane ruch oraz inne informacje
